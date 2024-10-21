@@ -1,3 +1,5 @@
+# sudokuSolver
+
 Los programas fueron hechos tanto para resolver como para generar sudokus, los lenguajes de programación usados fueron C++, Java y Python.
 
 En el caso de python se cuentan con programas tanto para consola como con interfaz gráfica GUI.
