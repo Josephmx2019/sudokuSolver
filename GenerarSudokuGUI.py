@@ -1,4 +1,4 @@
-import tkinter as tk
+from tkinter import Entry, Tk, Button, END
 from tkinter import messagebox
 from random import shuffle
 from reportlab.lib.pagesizes import letter
@@ -65,12 +65,12 @@ def cargar_sudoku(tablero, entradas):
     for i in range(N):
         for j in range(N):
             if tablero[i][j] != 0:
-                entradas[i][j].delete(0, tk.END)
+                entradas[i][j].delete(0, END)
                 entradas[i][j].insert(0, str(tablero[i][j]))
                 entradas[i][j].config(state='disabled')  # Deshabilitar la celda si ya tiene un número
             else:
                 entradas[i][j].config(state='normal')
-                entradas[i][j].delete(0, tk.END)
+                entradas[i][j].delete(0, END)
 
 # Función para obtener el Sudoku desde la interfaz
 def obtener_sudoku(entradas):
@@ -94,16 +94,27 @@ def resolver_desde_interfaz(entradas):
     else:
         messagebox.showerror("Error", "No se puede resolver el Sudoku.")
 
+# Función para verificar si la solución del usuario es correcta
+def verificar_sudoku(entradas, tablero_original):
+    tablero_usuario = obtener_sudoku(entradas)
+    for i in range(N):
+        for j in range(N):
+            if tablero_usuario[i][j] != tablero_original[i][j] and tablero_original[i][j] != 0:
+                messagebox.showerror("Error", "El Sudoku no es correcto.")
+                return
+    messagebox.showinfo("Éxito", "¡El Sudoku está correctamente resuelto!")
+
 # Función para generar el PDF
 def generar_pdf(tablero):
     c = canvas.Canvas("sudoku.pdf", pagesize=letter)
     width, height = letter
 
     # Títulos
+    c.setFont("Helvetica-Bold", 24)  # Aumentar el tamaño de la fuente
     c.drawString(100, height - 50, "Sudoku Generado")
 
     # Tamaño de la celda y posiciones iniciales
-    cell_size = 20
+    cell_size = 40  # Aumentar el tamaño de cada celda
     x_start = 100
     y_start = height - 100
 
@@ -112,7 +123,8 @@ def generar_pdf(tablero):
         for j in range(N):
             # Dibujar el número en la celda
             if tablero[i][j] != 0:
-                c.drawString(x_start + j * cell_size + 5, y_start - i * cell_size - 15, str(tablero[i][j]))
+                c.setFont("Helvetica", 18)  # Ajustar el tamaño de la fuente para los números
+                c.drawString(x_start + j * cell_size + 10, y_start - i * cell_size - 30, str(tablero[i][j]))
 
             # Dibujar líneas de cuadrícula
             c.rect(x_start + j * cell_size, y_start - i * cell_size - cell_size, cell_size, cell_size)
@@ -130,33 +142,45 @@ def generar_pdf(tablero):
 
 # Interfaz gráfica con Tkinter
 def main():
-    ventana = tk.Tk()
+    ventana = Tk()
     ventana.title("Sudoku Solver")
+    # Establecer el color de fondo de la ventana
+    ventana.configure(bg='black')  # Fondo negro para la ventana
+
     
     # Crear la cuadrícula de entradas de texto (9x9)
     entradas = []
     for i in range(N):
         fila = []
         for j in range(N):
-            entrada = tk.Entry(ventana, width=3, justify='center', font=('Arial', 18))
-            entrada.grid(row=i, column=j, padx=5, pady=5)
+            entrada = Entry(ventana, width=3, justify='center', font=('Arial', 18), bd=2, relief="solid", bg='white', fg='black')
+            # Condicional para resaltar las líneas de las divisiones 3x3
+            if i % 3 == 0 and i != 0:
+                entrada.grid(row=i, column=j, padx=(2, 1), pady=(4, 1))  # Espaciado más grande arriba
+            elif j % 3 == 0 and j != 0:
+                entrada.grid(row=i, column=j, padx=(4, 1), pady=(2, 1))  # Espaciado más grande a la izquierda
+            else:
+                entrada.grid(row=i, column=j, padx=1, pady=1)
             fila.append(entrada)
         entradas.append(fila)
 
     # Crear botones
     tablero = []
-    btn_generar_facil = tk.Button(ventana, text="Generar Sudoku facil", command=lambda: generar_sudoku_facil(tablero) or cargar_sudoku(tablero, entradas))
+    btn_generar_facil = Button(ventana, text="Generar Sudoku fácil", command=lambda: generar_sudoku_facil(tablero) or cargar_sudoku(tablero, entradas))
     btn_generar_facil.grid(row=N, column=0, columnspan=4, pady=10)
-    btn_generar_medio = tk.Button(ventana, text="Generar Sudoku medio", command=lambda: generar_sudoku_medio(tablero) or cargar_sudoku(tablero, entradas))
+    btn_generar_medio = Button(ventana, text="Generar Sudoku medio", command=lambda: generar_sudoku_medio(tablero) or cargar_sudoku(tablero, entradas))
     btn_generar_medio.grid(row=N, column=3, columnspan=4, pady=10)
-    btn_generar_dificil = tk.Button(ventana, text="Generar Sudoku díficil", command=lambda: generar_sudoku_dificil(tablero) or cargar_sudoku(tablero, entradas))
-    btn_generar_dificil.grid(row=N, column=6, columnspan=4, pady=10)
+    btn_generar_dificil = Button(ventana, text="Generar Sudoku difícil", command=lambda: generar_sudoku_dificil(tablero) or cargar_sudoku(tablero, entradas))
+    btn_generar_dificil.grid(row=N, column=7, columnspan=4, pady=10)
 
-    btn_resolver = tk.Button(ventana, text="Resolver Sudoku", command=lambda: resolver_desde_interfaz(entradas))
-    btn_resolver.grid(row=N, column=9, columnspan=4, pady=10)
+    btn_resolver = Button(ventana, text="Resolver Sudoku", command=lambda: resolver_desde_interfaz(entradas))
+    btn_resolver.grid(row=N + 1, column=7, columnspan=4, pady=10)
 
-    btn_generar_pdf = tk.Button(ventana, text="Generar PDF", command=lambda: generar_pdf(tablero))
-    btn_generar_pdf.grid(row=N + 1, column=0, columnspan=4, pady=10)
+    btn_verificar = Button(ventana, text="Verificar Sudoku", command=lambda: verificar_sudoku(entradas, tablero))
+    btn_verificar.grid(row=N + 1, column=0, columnspan=4, pady=10)
+
+    btn_generar_pdf = Button(ventana, text="Generar PDF", command=lambda: generar_pdf(tablero))
+    btn_generar_pdf.grid(row=N + 1, column=4, columnspan=4, pady=10)
 
     ventana.mainloop()
 
